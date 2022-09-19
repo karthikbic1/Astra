@@ -5,7 +5,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"encoding/json"
+	handler "astra/handlers"
 	"fmt"
 	"log"
 	"net/http"
@@ -52,7 +52,8 @@ func init() {
 
 func CreateRouter() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/", testHandler)
+	r.HandleFunc("/", handler.TestHandler).Methods("GET")
+	r.HandleFunc("/fetchlogs", handler.FetchLogsHandler).Methods("GET")
 
 	return r
 }
@@ -68,21 +69,8 @@ func loggingMiddleware(handler http.Handler) http.Handler {
 func serverHandler(handler http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		handler.ServeHTTP(w, r)
 	})
-}
-
-func testHandler(w http.ResponseWriter, r *http.Request) {
-	type response struct {
-		Status  string
-		Message string
-	}
-
-	resp := &response{
-		Status:  "ok",
-		Message: "Hello World!",
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(&resp)
-	return
 }
