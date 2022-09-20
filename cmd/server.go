@@ -52,7 +52,6 @@ func init() {
 
 func CreateRouter() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/", handler.TestHandler).Methods("GET")
 	r.HandleFunc("/fetchlogs", handler.FetchLogsHandler).Methods("GET")
 
 	return r
