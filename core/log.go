@@ -1,16 +1,54 @@
 package core
 
 import (
+	httputils "astra/httputil"
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 )
 
 func FetchLogsFromSecondaryServer(num_lines int, file_name string, filter string, secondary_server string) (string, error) {
-	// TODO
-	return "from secondary server..", errors.New("Not Implemented..")
+	if secondary_server == "" {
+		return "", errors.New("Not fetching from secondary server")
+	}
+
+	query := map[string]interface{}{
+		// this appended to mimic the behaviour of file not present on primary server
+		// but exists on the secondary server. Idea is file_name: xyz wont be present,
+		// but file_name: xyz-secondary will be, so when the request hits the primary
+		// server file wont be found and its forward to second server with `xyz-secondary`
+		// which will exists and secondary server will return.
+		"file_name": file_name + "-secondary",
+		"num_lines": num_lines,
+	}
+
+	if filter != "" {
+		query["filter"] = filter
+	}
+
+	status_code, bytes, err := httputils.Get(
+		context.Background(),
+		secondary_server+"/fetchlogs",
+		query,
+	)
+
+	if status_code != http.StatusOK || err != nil {
+		return "", err
+	}
+
+	var jsonMap map[string]interface{}
+	err = json.Unmarshal([]byte(string(bytes)), &jsonMap)
+
+	if err != nil {
+		return "", err
+	}
+
+	return jsonMap["Logs"].(string), nil
 }
 
 func FetchLogsFromServer(base_path string, file_name string, num_lines int, filter string, secondary_server string) (string, error) {
@@ -31,7 +69,7 @@ func FetchLogsFromServer(base_path string, file_name string, num_lines int, filt
 
 	if err != nil {
 		// if file doesnt exists on the primary server
-		// try to fetch it from secondary server
+		// try to fetch it from secondary server if provided
 		secondary_server_logs, ss_err := FetchLogsFromSecondaryServer(num_lines, file_name, filter, secondary_server)
 		if ss_err != nil {
 			ss_err = errors.New("Primary Server:" + err.Error() + ", Secondary Server:" + ss_err.Error())
