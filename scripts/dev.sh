@@ -20,7 +20,7 @@ elif [[ $1 == "up" ]]; then
     ./astra server --port=$port
 elif [[ $1 == "test" ]]; then
     echo "Unit Testing Astra app.."
-    go test
+    go test ./...
 else
-    echo "Invalid choice. Select between dev init or dev up"
+    echo "Invalid choice. Select between dev init or dev up or dev test"
 fi
