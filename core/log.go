@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+var FetchLogsFromServerFunc = FetchLogsFromServer
+
 func FetchLogsFromSecondaryServer(num_lines int, file_name string, filter string, secondary_server string) (string, error) {
 	if secondary_server == "" {
 		return "", errors.New("Not fetching from secondary server")

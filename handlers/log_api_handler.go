@@ -63,7 +63,7 @@ func FetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch the logs in latest in fashion with user provided conditions.
-	logs, err := core.FetchLogsFromServer(BasePath, file_name, num_lines, filter, secondary_server)
+	logs, err := core.FetchLogsFromServerFunc(BasePath, file_name, num_lines, filter, secondary_server)
 
 	// Error processing the file return proper error to the user.
 	if err != nil {
