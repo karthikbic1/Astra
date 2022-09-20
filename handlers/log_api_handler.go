@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	BasePath    = "/var/log"
-	MinLogLines = 1
-	MaxLogLines = 10000
+	BasePath       = "/var/log"
+	MinLogLines    = 1
+	MaxLogLines    = 10000
+	DefaultLogLine = 10
 )
 
 func getNumLines(query_values url.Values) int {
@@ -22,8 +23,7 @@ func getNumLines(query_values url.Values) int {
 
 	// Any error parsing the num_lines parameter, then use the MinLogLines
 	if err != nil {
-		log.Println(err.Error())
-		return MinLogLines
+		return DefaultLogLine
 	}
 
 	// if user provides num_lines less than MinLogLines, then ensure we return atleast MinLogLines

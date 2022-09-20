@@ -31,6 +31,11 @@ func Test_getNumLines(t *testing.T) {
 			args: args{query_values: url.Values{"num_lines": []string{"100000000"}}},
 			want: 10000,
 		},
+		{
+			name: "TestgetDefaultNumLines",
+			args: args{query_values: url.Values{}},
+			want: 10,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
