@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"astra/utils"
+	"astra/core"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,17 +9,24 @@ import (
 	"strconv"
 )
 
+const (
+	BasePath    = "/var/log"
+	MinLogLines = 10
+	MaxLogLines = 10000
+)
+
 func getNumLines(query_values url.Values) int {
-	log.Println(query_values.Get("num_lines"))
 	num_lines, err := strconv.Atoi(query_values.Get("num_lines"))
 
 	if err != nil {
 		log.Println(err.Error())
-		return 0
+		return MinLogLines
 	}
 
-	if num_lines < 0 {
-		return 0
+	if num_lines < MinLogLines {
+		return MinLogLines
+	} else if num_lines > MaxLogLines {
+		return MaxLogLines
 	} else {
 		return num_lines
 	}
@@ -27,9 +34,8 @@ func getNumLines(query_values url.Values) int {
 
 func FetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 	type response struct {
-		TotalLines int
-		Logs       string
-		ErrorMsg   string
+		Logs     string
+		ErrorMsg string
 	}
 
 	resp := &response{}
@@ -47,14 +53,13 @@ func FetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("NumLines: %v, FileName: %v, Filter: %v, SecondaryServer: %v", num_lines, file_name, filter, secondary_server)
-	logs, err := utils.FetchLogsFromServer(num_lines, file_name, filter, secondary_server)
+	logs, err := core.FetchLogsFromServer(BasePath, file_name, num_lines, filter, secondary_server)
 
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		resp.ErrorMsg = err.Error()
 	} else {
-		resp.TotalLines = num_lines
 		resp.Logs = logs
 	}
 
