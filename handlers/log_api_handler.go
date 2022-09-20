@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -66,9 +67,16 @@ func FetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Error processing the file return proper error to the user.
 	if err != nil {
-		log.Println(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
+
 		resp.ErrorMsg = err.Error()
+		if strings.Contains(resp.ErrorMsg, "no such file or directory") {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		log.Println(resp.ErrorMsg)
+
 	} else {
 		resp.Logs = logs
 	}

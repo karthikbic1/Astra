@@ -95,8 +95,8 @@ Also dont provide the secondary server
 
 ```
 curl -X GET "http://localhost:3000/fetchlogs?file_name=testlog-example" -i
-HTTP/1.1 500 Internal Server Error
-Date: Tue, 20 Sep 2022 07:04:52 GMT
+HTTP/1.1 404 Not Found
+Date: Tue, 20 Sep 2022 19:32:39 GMT
 Content-Length: 150
 Content-Type: text/plain; charset=utf-8
 
