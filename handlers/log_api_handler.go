@@ -41,7 +41,7 @@ func getNumLines(query_values url.Values) int {
 
 func FetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 	type response struct {
-		Logs     string
+		Logs     []string
 		ErrorMsg string
 	}
 

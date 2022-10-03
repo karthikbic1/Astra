@@ -10,12 +10,12 @@ import (
 	"testing"
 )
 
-func MockFetchLogsFromServerSuccess(base_path string, file_name string, num_lines int, filter string, secondary_server string) (string, error) {
-	return "mocked_log_content", nil
+func MockFetchLogsFromServerSuccess(base_path string, file_name string, num_lines int, filter string, secondary_server string) ([]string, error) {
+	return []string{"mocked_log_content"}, nil
 }
 
-func MockFetchLogsFromServerFailure(base_path string, file_name string, num_lines int, filter string, secondary_server string) (string, error) {
-	return "", errors.New("mock error")
+func MockFetchLogsFromServerFailure(base_path string, file_name string, num_lines int, filter string, secondary_server string) ([]string, error) {
+	return []string{""}, errors.New("mock error")
 }
 
 func Test_getNumLines(t *testing.T) {
@@ -71,24 +71,24 @@ func TestFetchLogsHandler(t *testing.T) {
 		args           args
 		expected       string
 		expectedStatus int
-		mockFetchLogs  func(base_path string, file_name string, num_lines int, filter string, secondary_server string) (string, error)
+		mockFetchLogs  func(base_path string, file_name string, num_lines int, filter string, secondary_server string) ([]string, error)
 	}{
 		{
 			name:           "TestFetchLogsHandlerWithFileName",
-			expected:       `{"Logs":"","ErrorMsg":"file_name request parameter is requried"}`,
+			expected:       `{"Logs":null,"ErrorMsg":"file_name request parameter is requried"}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 
 		{
 			name:           "TestFetchLogsHandlerWithFileDoesntExist",
-			expected:       `{"Logs":"","ErrorMsg":"Primary Server:open /var/log/dontexits: no such file or directory, Secondary Server:Not fetching from secondary server"}`,
+			expected:       `{"Logs":null,"ErrorMsg":"Primary Server:open /var/log/dontexits: no such file or directory, Secondary Server:Not fetching from secondary server"}`,
 			expectedStatus: http.StatusNotFound,
 			args:           args{file_name: "dontexits"},
 		},
 
 		{
 			name:           "TestFetchLogsHandlerSuccess",
-			expected:       `{"Logs":"mocked_log_content","ErrorMsg":""}`,
+			expected:       `{"Logs":["mocked_log_content"],"ErrorMsg":""}`,
 			expectedStatus: http.StatusOK,
 			args:           args{file_name: "exists"},
 			mockFetchLogs:  MockFetchLogsFromServerSuccess,
@@ -96,7 +96,7 @@ func TestFetchLogsHandler(t *testing.T) {
 
 		{
 			name:           "TestFetchLogsHandlerFailure",
-			expected:       `{"Logs":"","ErrorMsg":"mock error"}`,
+			expected:       `{"Logs":null,"ErrorMsg":"mock error"}`,
 			expectedStatus: http.StatusInternalServerError,
 			args:           args{file_name: "exists"},
 			mockFetchLogs:  MockFetchLogsFromServerFailure,

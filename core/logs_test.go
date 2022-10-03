@@ -8,6 +8,18 @@ import (
 	"testing"
 )
 
+func testEq(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func TestFetchLogsFromServer(t *testing.T) {
 	type args struct {
 		base_path        string
@@ -19,7 +31,7 @@ func TestFetchLogsFromServer(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    string
+		want    []string
 		wantErr bool
 		errMsg  string
 	}{
@@ -29,17 +41,16 @@ func TestFetchLogsFromServer(t *testing.T) {
 				base_path: ".",
 				file_name: "testlog",
 			},
-			want: `
-this is 9 line.
-this is 8 line 
-this is 7 line
-this is 6 line.
-this is 5 line 今日は
-this is 4 line
-this is 3 line.
-this is 2 line
-this is 1 line
-`,
+			want: []string{"this is 9 line.",
+				"this is 8 line ",
+				"this is 7 line",
+				"this is 6 line.",
+				"this is 5 line 今日は",
+				"this is 4 line",
+				"this is 3 line.",
+				"this is 2 line",
+				"this is 1 line",
+			},
 			wantErr: false,
 		},
 		{
@@ -49,9 +60,10 @@ this is 1 line
 				file_name: "testlog",
 				num_lines: 2,
 			},
-			want: `
-this is 9 line.
-this is 8 line `,
+
+			want: []string{"this is 9 line.",
+				"this is 8 line ",
+			},
 			wantErr: false,
 		},
 
@@ -62,8 +74,8 @@ this is 8 line `,
 				file_name: "testlog",
 				filter:    "5 line",
 			},
-			want: `
-this is 5 line 今日は`,
+			want: []string{
+				"this is 5 line 今日は"},
 			wantErr: false,
 		},
 
@@ -73,7 +85,7 @@ this is 5 line 今日は`,
 				base_path: ".",
 				file_name: "doesntexists",
 			},
-			want:    "",
+			want:    []string{},
 			wantErr: true,
 			errMsg:  "Primary Server:open ./doesntexists: no such file or directory, Secondary Server:Not fetching from secondary server",
 		},
@@ -85,7 +97,7 @@ this is 5 line 今日は`,
 				file_name:        "testlog-not-from-primary",
 				secondary_server: "true",
 			},
-			want:    "this is from secondary server",
+			want:    []string{"this is from secondary server"},
 			wantErr: false,
 		},
 	}
@@ -96,12 +108,12 @@ this is 5 line 今日は`,
 				s := httptest.NewServer(
 					http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 						type response struct {
-							Logs     string
+							Logs     []string
 							ErrorMsg string
 						}
 
 						resp := &response{
-							Logs: "this is from secondary server",
+							Logs: []string{"this is from secondary server"},
 						}
 						json.NewEncoder(w).Encode(&resp)
 					}),
@@ -121,7 +133,7 @@ this is 5 line 今日は`,
 				}
 				return
 			}
-			if got != tt.want {
+			if !testEq(got, tt.want) {
 				t.Errorf("FetchLogsFromServer() = %v, want %v", got, tt.want)
 			}
 		})

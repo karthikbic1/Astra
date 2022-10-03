@@ -15,16 +15,16 @@ Run the following command to get started..
 ```
 
 # Install Dependencies for the first time.
-$ bash script/dev init
+$ bash scripts/dev.sh init
 
 # Start the Astra App - defaults on port 3000
-$ bash script/dev up
+$ bash scripts/dev.sh up
 
 # Start the Astra App on a different port
-$ bash script/dev up 3001
+$ bash scripts/dev.sh up 3001
 
 # To run unit tests
-$ bash script/dev test
+$ bash scripts/dev.sh test
 
 ```
 

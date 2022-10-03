@@ -14,9 +14,9 @@ import (
 
 var FetchLogsFromServerFunc = FetchLogsFromServer
 
-func FetchLogsFromSecondaryServer(num_lines int, file_name string, filter string, secondary_server string) (string, error) {
+func FetchLogsFromSecondaryServer(num_lines int, file_name string, filter string, secondary_server string) ([]string, error) {
 	if secondary_server == "" {
-		return "", errors.New("Not fetching from secondary server")
+		return []string{}, errors.New("Not fetching from secondary server")
 	}
 
 	query := map[string]interface{}{
@@ -40,27 +40,32 @@ func FetchLogsFromSecondaryServer(num_lines int, file_name string, filter string
 	)
 
 	if status_code != http.StatusOK || err != nil {
-		return "", err
+		return []string{}, err
 	}
 
-	var jsonMap map[string]interface{}
-	err = json.Unmarshal([]byte(string(bytes)), &jsonMap)
+	type jsonMap struct {
+		ErrorMsg string
+		Logs     []string
+	}
+
+	var resp jsonMap
+	err = json.Unmarshal([]byte(string(bytes)), &resp)
 
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 
-	return jsonMap["Logs"].(string), nil
+	return resp.Logs, nil
 }
 
-func FetchLogsFromServer(base_path string, file_name string, num_lines int, filter string, secondary_server string) (string, error) {
+func FetchLogsFromServer(base_path string, file_name string, num_lines int, filter string, secondary_server string) ([]string, error) {
 
 	// This the core business logic of the fetch logs api
 	// Read lines from the given file starting from EOF and
 	// seek backeards to apply the conditions such no of
 	// lines, filters in a single pass.
 
-	logs := ""
+	logs_arr := []string{}
 	new_line := ""
 	line_count := 0
 	next_char := make([]byte, 1)
@@ -95,25 +100,25 @@ func FetchLogsFromServer(base_path string, file_name string, num_lines int, filt
 		logfile.ReadAt(next_char, current_position)
 		// Decrease the current cursor to point to next character on the left.
 		current_position = current_position - 1
-		// Append the character to create line. Since we are reading backeards
-		// append the character in the front of the line.
-		new_line = string(next_char) + new_line
 
 		// If a new line character is encountered then
 		// its time to form the line and apply conditions.
-		if string(next_char) == "\n" {
-			append := true
+		if string(next_char) == "\n" { // Append the character to create line. Since we are reading backeards
+
+			append_str := true
 
 			// check if filter is present and filter is part of newly formed line.
 			if filter != "" {
-				append = strings.Contains(new_line, filter)
+				append_str = strings.Contains(new_line, filter)
 			}
 
 			// append the line to the log lines
 			// Keep track of no of line
-			if append {
-				logs = logs + new_line
+			if append_str && new_line != "" {
+
+				logs_arr = append(logs_arr, new_line)
 				line_count = line_count + 1
+
 			}
 
 			// Reset the new_line variable for next iteration to hold new line text.
@@ -124,8 +129,12 @@ func FetchLogsFromServer(base_path string, file_name string, num_lines int, filt
 			if num_lines > 0 && num_lines == line_count {
 				break
 			}
+		} else {
+			// Append the character to create line. Since we are reading backeards
+			// append the character in the front of the line.
+			new_line = string(next_char) + new_line
 		}
 	}
 
-	return logs, nil
+	return logs_arr, nil
 }
